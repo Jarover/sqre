@@ -8,13 +8,84 @@ import (
 	"net/http"
 	"sqre/models"
 	"sqre/utils"
+	"strconv"
 	"time"
 )
+
 var (
-	version = "0.0.3"
+	version = "0.0.4"
 )
 
+func FloatToString(inputNum float64) string {
+	// to convert a float number to a string
+	return strconv.FormatFloat(inputNum, 'f', 6, 64)
+}
+
 func redirect(c *gin.Context) {
+	par := c.Param("par")
+	var link = models.LinkTrek{}
+	var obj = models.Gobject{}
+
+	err := models.GetDB().First(&link, "Short = ?", par).Error
+	if err != nil {
+		log.Println(err)
+		log.Println("bad url : " + par)
+		c.JSON(http.StatusOK, gin.H{
+
+			"error": par,
+		})
+	}
+
+	log.Println("redirect to : " + link.Remote)
+	t := time.Now()
+	t.Format("2006-01-02 15:04:05")
+	var click = models.Click{
+		Link_id:           link.ID,
+		Created:           t.Format("2006-01-02 15:04:05"),
+		Referrer:          "",
+		User_agent:        "+",
+		User_agent_source: "",
+	}
+	result := models.GetDB().Create(&click)
+	if result.Error != nil {
+		log.Println(result.Error)
+	}
+	if len(link.Remote) > 0 {
+		c.Redirect(http.StatusMovedPermanently, link.Remote)
+		c.Abort()
+	} else {
+
+		switch link.Cat_id {
+		// Object
+		case 4:
+			err := models.GetDB().First(&obj, "id = ?", link.Cat_id).Error
+			if err != nil {
+				log.Println(err)
+				log.Println("bad object cat id : " + string(link.ID))
+				c.JSON(http.StatusOK, gin.H{
+
+					"errorGobject": par,
+				})
+			}
+			url := "https://yandex.ru/map/?whatshere[point]=" + FloatToString(obj.Lat) + "," + FloatToString(obj.Lon) + "&whatshere[zoom]=12"
+			c.Redirect(http.StatusMovedPermanently, url)
+			c.Abort()
+			break
+		default:
+			c.JSON(http.StatusOK, gin.H{
+				"version": version,
+				"url":     par,
+				"cat_id":  link.Cat_id,
+				"obj":     link.Objid,
+			})
+		}
+
+	}
+
+}
+
+func info(c *gin.Context) {
+
 	par := c.Param("par")
 	var link = models.LinkTrek{}
 
@@ -27,26 +98,16 @@ func redirect(c *gin.Context) {
 			"error": par,
 		})
 	}
-	log.Println("redirect to : " + link.Remote)
-	t := time.Now()
-	t.Format("2006-01-02 15:04:05")
-	var click = models.Click{
-		Link_id: link.ID,
-		Created: t.Format("2006-01-02 15:04:05"),
-		Referrer: "",
-		User_agent: "+",
-		User_agent_source: "",
-	}
-	result:= models.GetDB().Create(&click)
-	if result.Error != nil {
-		log.Println(result.Error)
-	}
-	c.Redirect(http.StatusMovedPermanently, link.Remote)
-	c.Abort()
 
+	c.JSON(http.StatusOK, gin.H{
+		"version": version,
+		"url":     par,
+		"cat_id":  link.Cat_id,
+		"obj":     link.Objid,
+	})
 }
 
-func sqltask(c *gin.Context) {
+func sqlTask(c *gin.Context) {
 
 	var link = models.LinkTrek{}
 	var link2 = models.LinkTrek{}
@@ -72,17 +133,15 @@ func startPage(c *gin.Context) {
 	})
 }
 
-
-
 func main() {
 
 	dir := utils.GetDir()
 
-	logpath := dir + "/sqre_app.log"
+	logPath := dir + "/sqre_app.log"
 
-	fmt.Println(logpath)
-	l := &lumberjack.Logger{
-		Filename:   logpath,
+	fmt.Println(logPath)
+	l := &lumberjack.Logger{ //nolint:typecheck
+		Filename:   logPath,
 		MaxSize:    500, // megabytes
 		MaxBackups: 10,
 		MaxAge:     1,     //days
@@ -100,8 +159,8 @@ func main() {
 			"message": "pong",
 		})
 	})
-
-	r.GET("/:par/sqltask", sqltask)
+	r.GET("/:par/info", info)
+	r.GET("/:par/sqltask", sqlTask)
 
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
