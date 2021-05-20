@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	version = "0.0.4"
+	version = "0.0.9"
 )
 
 func FloatToString(inputNum float64) string {
@@ -24,7 +24,7 @@ func FloatToString(inputNum float64) string {
 func redirect(c *gin.Context) {
 	par := c.Param("par")
 	var link = models.LinkTrek{}
-	var obj = models.Gobject{}
+
 
 	err := models.GetDB().First(&link, "Short = ?", par).Error
 	if err != nil {
@@ -58,16 +58,18 @@ func redirect(c *gin.Context) {
 		switch link.Cat_id {
 		// Object
 		case 4:
-			err := models.GetDB().First(&obj, "id = ?", link.Cat_id).Error
+			var obj = models.Gobject{}
+			err := models.GetDB().First(&obj, "id = ?", link.Objid).Error
 			if err != nil {
 				log.Println(err)
-				log.Println("bad object cat id : " + string(link.ID))
+				log.Println("bad object cat id : " + strconv.Itoa(link.ID))
 				c.JSON(http.StatusOK, gin.H{
 
 					"errorGobject": par,
 				})
 			}
-			url := "https://yandex.ru/map/?whatshere[point]=" + FloatToString(obj.Lat) + "," + FloatToString(obj.Lon) + "&whatshere[zoom]=12"
+			url := "https://yandex.ru/maps/?pt=" + FloatToString(obj.Lon) + "," + FloatToString(obj.Lat) + "&z=14&l=map"
+			log.Println(url)
 			c.Redirect(http.StatusMovedPermanently, url)
 			c.Abort()
 			break
@@ -75,7 +77,7 @@ func redirect(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{
 				"version": version,
 				"url":     par,
-				"cat_id":  link.Cat_id,
+				"typeId":  link.Cat_id,
 				"obj":     link.Objid,
 			})
 		}
@@ -99,12 +101,34 @@ func info(c *gin.Context) {
 		})
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	out:= gin.H{
 		"version": version,
 		"url":     par,
-		"cat_id":  link.Cat_id,
-		"obj":     link.Objid,
-	})
+		"typeId":  link.Cat_id,
+
+	}
+
+	switch link.Cat_id {
+	// Object
+	case 4:
+		var obj = models.Gobject{}
+		err := models.GetDB().First(&obj, "id = ?", link.Objid).Error
+		if err != nil {
+			log.Println(err)
+			log.Println("bad object cat id : " + strconv.Itoa(link.ID))
+
+		}
+		out["obj"] = obj
+		if len(link.Remote) > 0 {
+			out["url"] = link.Remote
+		} else {
+			out["url"] = "https://yandex.ru/maps/?pt=" + FloatToString(obj.Lon) + "," + FloatToString(obj.Lat) + "&z=14&l=map"
+
+		}
+		break
+	}
+
+	c.JSON(http.StatusOK, out)
 }
 
 func sqlTask(c *gin.Context) {

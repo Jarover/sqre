@@ -2,7 +2,8 @@ package models
 
 type Gobject struct {
 	ID         int `json:"id"`
-	Name, Desc string
+	Name 		string
+	Desc 		string
 	Cat_id     int
 	Lat        float64
 	Lon        float64
