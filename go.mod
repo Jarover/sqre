@@ -1,4 +1,4 @@
-module sqre
+module github.com/Jarover/Sqre
 
 go 1.16
 

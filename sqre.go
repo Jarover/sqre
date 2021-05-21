@@ -2,18 +2,17 @@ package main
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"gopkg.in/natefinch/lumberjack.v2"
 	"log"
 	"net/http"
-	"sqre/models"
-	"sqre/utils"
 	"strconv"
 	"time"
-)
 
-var (
-	version = "0.0.9"
+	"github.com/Jarover/Sqre/config"
+	"github.com/Jarover/Sqre/models"
+	"github.com/Jarover/Sqre/utils"
+
+	"github.com/gin-gonic/gin"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 func FloatToString(inputNum float64) string {
@@ -24,7 +23,6 @@ func FloatToString(inputNum float64) string {
 func redirect(c *gin.Context) {
 	par := c.Param("par")
 	var link = models.LinkTrek{}
-
 
 	err := models.GetDB().First(&link, "Short = ?", par).Error
 	if err != nil {
@@ -75,7 +73,7 @@ func redirect(c *gin.Context) {
 			break
 		default:
 			c.JSON(http.StatusOK, gin.H{
-				"version": version,
+				"version": config.Release,
 				"url":     par,
 				"typeId":  link.Cat_id,
 				"obj":     link.Objid,
@@ -101,11 +99,10 @@ func info(c *gin.Context) {
 		})
 	}
 
-	out:= gin.H{
-		"version": version,
+	out := gin.H{
+		"version": config.Release,
 		"url":     par,
 		"typeId":  link.Cat_id,
-
 	}
 
 	switch link.Cat_id {
@@ -153,7 +150,7 @@ func sqlTask(c *gin.Context) {
 func startPage(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
-		"version": version,
+		"version": config.Release,
 	})
 }
 
@@ -173,7 +170,7 @@ func main() {
 	}
 	log.SetOutput(l)
 
-	log.Println("Version : " + version)
+	log.Println("Version : " + config.Release)
 	r := gin.Default()
 	r.GET("/", startPage)
 

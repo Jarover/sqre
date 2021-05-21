@@ -2,11 +2,12 @@ package models
 
 import (
 	"fmt"
+	"os"
+
+	"github.com/Jarover/Sqre/utils"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/joho/godotenv"
-	"os"
-	"sqre/utils"
 )
 
 var db *gorm.DB //база данных
