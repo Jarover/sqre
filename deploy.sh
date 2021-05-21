@@ -40,7 +40,7 @@ then
 fi;
 
 echo '* Распаковываем архив на серверe...'
-ssh $SSH_HOST "cd $DOC_ROOT; tar -xzf yourproject.tar.gz 2> /dev/null && rm -rf $DOC_ROOT/goapp/* && mv sqre $DOC_ROOT/goapp && chmod -R a+w $DOC_ROOT/goapp"
+ssh $SSH_HOST "cd $DOC_ROOT; tar -xzf yourproject.tar.gz 2> /dev/null && rm -rf $DOC_ROOT/goapp/sqre && mv sqre $DOC_ROOT/goapp && chmod -R a+w+x $DOC_ROOT/goapp/sqre"
 if [ $? -ne 0 ]
 then
   exit 1;

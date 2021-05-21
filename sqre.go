@@ -1,15 +1,16 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/Jarover/Sqre/config"
-	"github.com/Jarover/Sqre/models"
-	"github.com/Jarover/Sqre/utils"
+	"github.com/Jarover/sqre/models"
+	"github.com/Jarover/sqre/readconfig"
+	"github.com/Jarover/sqre/utils"
 
 	"github.com/gin-gonic/gin"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -73,7 +74,7 @@ func redirect(c *gin.Context) {
 			break
 		default:
 			c.JSON(http.StatusOK, gin.H{
-				"version": config.Release,
+				"version": readconfig.Release,
 				"url":     par,
 				"typeId":  link.Cat_id,
 				"obj":     link.Objid,
@@ -100,7 +101,7 @@ func info(c *gin.Context) {
 	}
 
 	out := gin.H{
-		"version": config.Release,
+		"version": readconfig.Release,
 		"url":     par,
 		"typeId":  link.Cat_id,
 	}
@@ -150,13 +151,44 @@ func sqlTask(c *gin.Context) {
 func startPage(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
-		"version": config.Release,
+		"version": readconfig.Release,
+		"data":    readconfig.BuildTime,
 	})
+}
+
+// Читаем флаги и окружение
+func readFlag(configFlag *readconfig.Flag) {
+	flag.StringVar(&configFlag.ConfigFile, "f", readconfig.GetEnv("CONFIGFILE", readconfig.GetDefaultConfigFile()), "config file")
+	//flag.StringVar(&configFlag.Host, "h", readconfig.GetEnv("HOST", ""), "host")
+	flag.UintVar(&configFlag.Port, "p", uint(readconfig.GetEnvInt("PORT", 0)), "port")
+	flag.Parse()
+
 }
 
 func main() {
 
+	fmt.Printf(
+		"Starting the service...\ncommit: %s, build time: %s, release: %s",
+		readconfig.Commit, readconfig.BuildTime, readconfig.Release,
+	)
+
 	dir := utils.GetDir()
+	var configFlag readconfig.Flag
+	readFlag(&configFlag)
+
+	fmt.Println(configFlag)
+	fmt.Println(dir + "/" + configFlag.ConfigFile)
+	Config, err := readconfig.ReadConfig(dir + "/" + configFlag.ConfigFile)
+	if configFlag.Port != 0 {
+		fmt.Println(Config)
+		Config.Port = configFlag.Port
+	}
+
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(Config)
 
 	logPath := dir + "/sqre_app.log"
 
@@ -170,7 +202,7 @@ func main() {
 	}
 	log.SetOutput(l)
 
-	log.Println("Version : " + config.Release)
+	log.Println("Version : " + readconfig.Release)
 	r := gin.Default()
 	r.GET("/", startPage)
 
@@ -183,5 +215,5 @@ func main() {
 	r.GET("/:par/info", info)
 	r.GET("/:par/sqltask", sqlTask)
 
-	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	r.Run(":" + strconv.FormatUint(uint64(Config.Port), 10)) // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
