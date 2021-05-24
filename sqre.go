@@ -74,7 +74,7 @@ func redirect(c *gin.Context) {
 			break
 		default:
 			c.JSON(http.StatusOK, gin.H{
-				"version": readconfig.Release,
+				"version": readconfig.Version.VersionStr(),
 				"url":     par,
 				"typeId":  link.Cat_id,
 				"obj":     link.Objid,
@@ -101,7 +101,7 @@ func info(c *gin.Context) {
 	}
 
 	out := gin.H{
-		"version": readconfig.Release,
+		"version": readconfig.Version.VersionStr(),
 		"url":     par,
 		"typeId":  link.Cat_id,
 	}
@@ -151,8 +151,8 @@ func sqlTask(c *gin.Context) {
 func startPage(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
-		"version": readconfig.Release,
-		"data":    readconfig.BuildTime,
+		"version": readconfig.Version.VersionStr(),
+		"data":    readconfig.Version.BuildTime,
 	})
 }
 
@@ -167,12 +167,12 @@ func readFlag(configFlag *readconfig.Flag) {
 
 func main() {
 
-	fmt.Printf(
-		"Starting the service...\ncommit: %s, build time: %s, release: %s",
-		readconfig.Commit, readconfig.BuildTime, readconfig.Release,
-	)
-
 	dir := utils.GetDir()
+	err := readconfig.Version.ReadVersionFile(dir + "/version.json")
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(readconfig.Version)
 	var configFlag readconfig.Flag
 	readFlag(&configFlag)
 
@@ -202,7 +202,6 @@ func main() {
 	}
 	log.SetOutput(l)
 
-	log.Println("Version : " + readconfig.Release)
 	r := gin.Default()
 	r.GET("/", startPage)
 

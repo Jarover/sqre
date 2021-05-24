@@ -10,11 +10,8 @@ clean:
 
 build:	clean
 	
-	python version.py inc-patch
-	go build \
-                -ldflags "-s -w -X ${PROJECT}/readconfig.Release=${RELEASE} \
-                -X ${PROJECT}/readconfig.Commit=${COMMIT} -X ${PROJECT}/readconfig.BuildTime=${BUILD_TIME}" \
-                -o ${APP}
+	python version_json.py inc-patch ${COMMIT}
+	go build -o ${APP}
 
 run:	build
 	./${APP} -f dev.json
