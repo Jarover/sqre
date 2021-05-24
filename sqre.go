@@ -16,11 +16,6 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-func FloatToString(inputNum float64) string {
-	// to convert a float number to a string
-	return strconv.FormatFloat(inputNum, 'f', 6, 64)
-}
-
 func redirect(c *gin.Context) {
 	par := c.Param("par")
 	var link = models.LinkTrek{}
@@ -67,7 +62,7 @@ func redirect(c *gin.Context) {
 					"errorGobject": par,
 				})
 			}
-			url := "https://yandex.ru/maps/?pt=" + FloatToString(obj.Lon) + "," + FloatToString(obj.Lat) + "&z=14&l=map"
+			url := "https://yandex.ru/maps/?pt=" + utils.FloatToString(obj.Lon) + "," + utils.FloatToString(obj.Lat) + "&z=14&l=map"
 			log.Println(url)
 			c.Redirect(http.StatusMovedPermanently, url)
 			c.Abort()
@@ -120,7 +115,7 @@ func info(c *gin.Context) {
 		if len(link.Remote) > 0 {
 			out["url"] = link.Remote
 		} else {
-			out["url"] = "https://yandex.ru/maps/?pt=" + FloatToString(obj.Lon) + "," + FloatToString(obj.Lat) + "&z=14&l=map"
+			out["url"] = "https://yandex.ru/maps/?pt=" + utils.FloatToString(obj.Lon) + "," + utils.FloatToString(obj.Lat) + "&z=14&l=map"
 
 		}
 		break
@@ -158,7 +153,7 @@ func startPage(c *gin.Context) {
 
 // Читаем флаги и окружение
 func readFlag(configFlag *readconfig.Flag) {
-	flag.StringVar(&configFlag.ConfigFile, "f", readconfig.GetEnv("CONFIGFILE", readconfig.GetDefaultConfigFile()), "config file")
+	flag.StringVar(&configFlag.ConfigFile, "f", readconfig.GetEnv("CONFIGFILE", utils.GetBaseFile()+".json"), "config file")
 	//flag.StringVar(&configFlag.Host, "h", readconfig.GetEnv("HOST", ""), "host")
 	flag.UintVar(&configFlag.Port, "p", uint(readconfig.GetEnvInt("PORT", 0)), "port")
 	flag.Parse()

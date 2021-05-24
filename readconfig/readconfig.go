@@ -4,9 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/url"
-	"os"
 	"path"
-	"path/filepath"
 	"strings"
 
 	"gopkg.in/ini.v1"
@@ -82,16 +80,6 @@ func (e *Config) CheckUrl(path string) error {
 	}
 	return nil
 
-}
-
-func GetDefaultConfigFile() string {
-
-	return GetBaseFile() + ".json"
-}
-
-func GetBaseFile() string {
-	filename := os.Args[0] // get command line first parameter
-	return strings.Split(filepath.Base(filename), ".")[0]
 }
 
 func ReadConfig(ConfigName string) (x *Config, err error) {
