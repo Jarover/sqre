@@ -80,26 +80,42 @@ func redirect(c *gin.Context) {
 
 }
 
-func info(c *gin.Context) {
-
+func suffix(c *gin.Context) {
 	par := c.Param("par")
+	suf := c.Param("suf")
+	out := gin.H{}
+	switch suf {
+	case "info":
+		out = info(par)
+	default:
+		out = gin.H{
+			"suffix":  suf,
+			"short":   par,
+			"version": readconfig.Version.VersionStr(),
+		}git 
+	}
+
+	c.JSON(http.StatusOK, out)
+}
+
+func info(par string) gin.H {
+
 	var link = models.LinkTrek{}
 
 	err := models.GetDB().First(&link, "Short = ?", par).Error
-	if err != nil {
-		log.Println(err)
-		log.Println("bad url : " + par)
-		c.JSON(http.StatusOK, gin.H{
-
-			"error": par,
-		})
-	}
-
 	out := gin.H{
 		"version": readconfig.Version.VersionStr(),
 		"url":     par,
-		"typeId":  link.Cat_id,
 	}
+	if err != nil {
+		log.Println(err)
+		log.Println("bad url : " + par)
+		out["error"] = par
+		return out
+
+	}
+
+	out["typeId"] = link.Cat_id
 
 	switch link.Cat_id {
 	// Object
@@ -121,7 +137,7 @@ func info(c *gin.Context) {
 		break
 	}
 
-	c.JSON(http.StatusOK, out)
+	return out
 }
 
 func sqlTask(c *gin.Context) {
@@ -201,13 +217,17 @@ func main() {
 	r.GET("/", startPage)
 
 	r.GET("/:par", redirect)
-	r.GET("/:par/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
+	/*
+		r.GET("/:par/ping", func(c *gin.Context) {
+			c.JSON(200, gin.H{
+				"message": "pong",
+			})
 		})
-	})
-	r.GET("/:par/info", info)
-	r.GET("/:par/sqltask", sqlTask)
+		r.GET("/:par/info", info)
+		r.GET("/:par/sqltask", sqlTask)
+	*/
+
+	r.GET("/:par/:suf", suffix)
 
 	r.Run(":" + strconv.FormatUint(uint64(Config.Port), 10)) // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
