@@ -1,14 +1,15 @@
 package models
 
 type Gobject struct {
-	ID      int `json:"id"`
-	Name    string
-	Anonce  string
-	Desc    string
-	Cat_id  int
-	Lat     float64
-	Lon     float64
-	Address string
+	ID         int `json:"id"`
+	Name       string
+	Anonce     string
+	Desc       string
+	Cat_id     int
+	Lat        float64
+	Lon        float64
+	Address    string
+	Attributes string
 }
 
 type LinkTrek struct {

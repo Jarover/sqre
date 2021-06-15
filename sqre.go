@@ -8,10 +8,11 @@ import (
 	"strconv"
 	"time"
 
+	"encoding/json"
+
 	"github.com/Jarover/sqre/models"
 	"github.com/Jarover/sqre/readconfig"
 	"github.com/Jarover/sqre/utils"
-
 	"github.com/gin-gonic/gin"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
@@ -92,7 +93,7 @@ func suffix(c *gin.Context) {
 			"suffix":  suf,
 			"short":   par,
 			"version": readconfig.Version.VersionStr(),
-		}git 
+		}
 	}
 
 	c.JSON(http.StatusOK, out)
@@ -134,6 +135,15 @@ func info(par string) gin.H {
 			out["url"] = "https://yandex.ru/maps/?pt=" + utils.FloatToString(obj.Lon) + "," + utils.FloatToString(obj.Lat) + "&z=14&l=map"
 
 		}
+		var emails []models.FieldRow
+
+		emails = append(emails, models.FieldRow{Name: "aaa", Info: "bbb"})
+		//out["emails"] = emails
+		attribute := models.Attribute{}
+		bytes := []byte(obj.Attributes)
+		json.Unmarshal(bytes, &attribute)
+		out["attributes"] = attribute
+
 		break
 	}
 
