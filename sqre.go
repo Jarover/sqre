@@ -72,7 +72,7 @@ func redirect(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{
 				"version": readconfig.Version.VersionStr(),
 				"url":     par,
-				"typeId":  link.Cat_id,
+				"typeid":  link.Cat_id,
 				"obj":     link.Objid,
 			})
 		}
@@ -116,7 +116,7 @@ func info(par string) gin.H {
 
 	}
 
-	out["typeId"] = link.Cat_id
+	out["typeid"] = link.Cat_id
 
 	switch link.Cat_id {
 	// Object
@@ -128,21 +128,49 @@ func info(par string) gin.H {
 			log.Println("bad object cat id : " + strconv.Itoa(link.ID))
 
 		}
-		out["obj"] = obj
+		out["id"] = obj.ID
+		out["name"] = obj.Name
+		out["anonce"] = obj.Anonce
+		out["desc"] = obj.Desc
+		out["catid"] = obj.Cat_id
+		out["lat"] = obj.Lat
+		out["lon"] = obj.Lon
+
 		if len(link.Remote) > 0 {
 			out["url"] = link.Remote
 		} else {
 			out["url"] = "https://yandex.ru/maps/?pt=" + utils.FloatToString(obj.Lon) + "," + utils.FloatToString(obj.Lat) + "&z=14&l=map"
 
 		}
-		var emails []models.FieldRow
 
-		emails = append(emails, models.FieldRow{Name: "aaa", Info: "bbb"})
-		//out["emails"] = emails
+		var emails, phones, urls, photos []models.FieldRow
+		var images []models.Upload
+		if err := models.GetDB().Where("gobject_id = ?", obj.ID).Order("id").Find(&images).Error; err != nil {
+			log.Println(err)
+		}
+
 		attribute := models.Attribute{}
 		bytes := []byte(obj.Attributes)
 		json.Unmarshal(bytes, &attribute)
-		out["attributes"] = attribute
+
+		for _, v := range images {
+			photos = append(photos, models.FieldRow{Name: "/media/" + v.Ufile, Info: v.Name})
+		}
+		for _, v := range attribute.Phones {
+			if v.Suffix == "e" {
+				emails = append(emails, models.FieldRow{Name: v.Name, Info: v.Info})
+			} else {
+				phones = append(phones, models.FieldRow{Name: v.Name, Info: v.Info})
+			}
+		}
+		for _, v := range attribute.Urls {
+			urls = append(urls, models.FieldRow{Name: v.Name, Info: v.Info})
+		}
+		out["emails"] = emails
+		out["phones"] = phones
+		out["photos"] = photos
+		out["urls"] = urls
+		//out["attributes"] = attribute
 
 		break
 	}
@@ -224,6 +252,7 @@ func main() {
 	log.SetOutput(l)
 
 	r := gin.Default()
+
 	r.GET("/", startPage)
 
 	r.GET("/:par", redirect)
@@ -240,4 +269,5 @@ func main() {
 	r.GET("/:par/:suf", suffix)
 
 	r.Run(":" + strconv.FormatUint(uint64(Config.Port), 10)) // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+
 }

@@ -12,6 +12,19 @@ type Gobject struct {
 	Attributes string
 }
 
+type Upload struct {
+	ID         int `json:"id"`
+	Gobject_id int
+	Name       string
+	Ufile      string
+	Suffix     string
+	Published  bool
+}
+
+func (Upload) TableName() string {
+	return "objects_upload"
+}
+
 type LinkTrek struct {
 	ID        int `json:"id"`
 	Short     string
