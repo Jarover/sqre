@@ -12,6 +12,6 @@ type Attribute struct {
 }
 
 type FieldRow struct {
-	Name string
-	Info string
+	Name string `json:"name"`
+	Info string `json:"info"`
 }

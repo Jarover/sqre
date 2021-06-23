@@ -106,14 +106,18 @@ definitions:
         type: "array"
         items:
           $ref: "#/definitions/SubArray"           
-      audio:
+      audios:
         type: "array"
         items:
           $ref: "#/definitions/SubArray" 
       tracks:
         type: "array"
         items:
-          $ref: "#/definitions/SubArray"           
+          $ref: "#/definitions/SubArray"   
+      routes:
+        type: "array"
+        items:
+          $ref: "#/definitions/SubArray"             
 
   SubArray:
     type: "object"
