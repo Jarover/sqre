@@ -143,7 +143,7 @@ func info(par string) gin.H {
 
 		}
 
-		var emails, phones, urls, photos, audios []models.FieldRow
+		var emails, phones, urls, photos, audios, tracks, routes, videos []models.FieldRow
 		var images []models.Upload
 		if err := models.GetDB().Where("gobject_id = ?", obj.ID).Order("id").Find(&images).Error; err != nil {
 			log.Println(err)
@@ -160,7 +160,12 @@ func info(par string) gin.H {
 			if v.Suffix == "a" {
 				audios = append(audios, models.FieldRow{Name: "/media/" + v.Ufile, Info: v.Name})
 			}
-
+			if v.Suffix == "r" {
+				routes = append(routes, models.FieldRow{Name: "/media/" + v.Ufile, Info: v.Name})
+			}
+			if v.Suffix == "t" {
+				tracks = append(tracks, models.FieldRow{Name: "/media/" + v.Ufile, Info: v.Name})
+			}
 		}
 		for _, v := range attribute.Phones {
 			if v.Suffix == "e" {
@@ -176,6 +181,9 @@ func info(par string) gin.H {
 		out["phones"] = phones
 		out["photos"] = photos
 		out["audios"] = audios
+		out["tracks"] = tracks
+		out["routes"] = routes
+		out["videos"] = videos
 		out["urls"] = urls
 		//out["attributes"] = attribute
 
