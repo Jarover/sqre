@@ -25,6 +25,17 @@ func (Upload) TableName() string {
 	return "objects_upload"
 }
 
+type News struct {
+	ID     int `json:"id"`
+	Name   string
+	Anonce string
+	Desc   string
+}
+
+func (News) TableName() string {
+	return "atlas_news"
+}
+
 type LinkTrek struct {
 	ID        int `json:"id"`
 	Short     string

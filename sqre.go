@@ -84,10 +84,66 @@ func redirect(c *gin.Context) {
 func suffix(c *gin.Context) {
 	par := c.Param("par")
 	suf := c.Param("suf")
-	out := gin.H{}
+	out := gin.H{
+		"version": readconfig.Version.VersionStr(),
+		"short":   par,
+	}
 	switch suf {
 	case "info":
 		out = info(par)
+	case "news":
+		out = news(par)
+	case "u":
+		fallthrough
+	case "m":
+		var link = models.LinkTrek{}
+
+		err := models.GetDB().First(&link, "Short = ?", par).Error
+
+		if err != nil {
+			log.Println(err)
+			log.Println("bad url : " + par)
+			out["error"] = par
+
+		}
+		switch link.Cat_id {
+		// Object
+		case 4:
+			var obj = models.Gobject{}
+			err := models.GetDB().First(&obj, "id = ?", link.Objid).Error
+			if err != nil {
+				log.Println(err)
+				log.Println("bad object cat id : " + strconv.Itoa(link.ID))
+				out["error"] = "bad object cat id : " + strconv.Itoa(link.ID)
+				break
+			}
+			attribute := models.Attribute{}
+			bytes := []byte(obj.Attributes)
+			json.Unmarshal(bytes, &attribute)
+			var urls []models.FieldRow
+			var redirectM, redirectU string
+			for _, v := range attribute.Urls {
+				if v.Suffix == "m" {
+					redirectM = v.Name
+				}
+				if v.Suffix == "u" {
+					redirectU = v.Name
+				}
+
+				urls = append(urls, models.FieldRow{Name: v.Name, Info: v.Info})
+			}
+			out["urls"] = urls
+
+			if suf == "m" && len(redirectM) > 0 {
+				c.Redirect(http.StatusMovedPermanently, redirectM)
+				c.Abort()
+			}
+			if suf == "u" && len(redirectU) > 0 {
+				c.Redirect(http.StatusMovedPermanently, redirectU)
+				c.Abort()
+			}
+		}
+
 	default:
 		out = gin.H{
 			"suffix":  suf,
@@ -97,6 +153,19 @@ func suffix(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, out)
+}
+
+func news(par string) gin.H {
+	out := gin.H{
+		"version": readconfig.Version.VersionStr(),
+		"url":     par,
+	}
+	var news []models.News
+	if err := models.GetDB().Where("published = ?", true).Order("id").Find(&news).Error; err != nil {
+		log.Println(err)
+	}
+	out["items"] = news
+	return out
 }
 
 func info(par string) gin.H {
@@ -170,12 +239,35 @@ func info(par string) gin.H {
 		for _, v := range attribute.Phones {
 			if v.Suffix == "e" {
 				emails = append(emails, models.FieldRow{Name: v.Name, Info: v.Info})
-			} else {
+			}
+			if v.Suffix == "p" || v.Suffix == "" {
 				phones = append(phones, models.FieldRow{Name: v.Name, Info: v.Info})
 			}
+
 		}
+		var firstChar string
 		for _, v := range attribute.Urls {
-			urls = append(urls, models.FieldRow{Name: v.Name, Info: v.Info})
+			if len(v.Suffix) > 1 {
+				firstChar = v.Suffix[:1]
+			} else {
+				firstChar = ""
+			}
+			if firstChar == "u" || firstChar == "" {
+				urls = append(urls, models.FieldRow{Name: v.Name, Info: v.Info})
+			}
+			if firstChar == "r" {
+				routes = append(routes, models.FieldRow{Name: v.Name, Info: v.Info})
+			}
+			if firstChar == "t" {
+				tracks = append(tracks, models.FieldRow{Name: v.Name, Info: v.Info})
+			}
+			if firstChar == "a" {
+				audios = append(audios, models.FieldRow{Name: v.Name, Info: v.Info})
+			}
+			if firstChar == "v" {
+				videos = append(videos, models.FieldRow{Name: v.Name, Info: v.Info})
+			}
+
 		}
 		out["emails"] = emails
 		out["phones"] = phones
