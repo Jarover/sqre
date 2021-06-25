@@ -19,6 +19,17 @@ import (
 
 func redirect(c *gin.Context) {
 	par := c.Param("par")
+
+	switch par {
+	case "news":
+
+		out := news(par)
+		c.JSON(http.StatusOK, out)
+		c.Abort()
+		return
+
+	}
+
 	var link = models.LinkTrek{}
 
 	err := models.GetDB().First(&link, "Short = ?", par).Error
@@ -91,8 +102,7 @@ func suffix(c *gin.Context) {
 	switch suf {
 	case "info":
 		out = info(par)
-	case "news":
-		out = news(par)
+
 	case "u":
 		fallthrough
 	case "m":
@@ -161,7 +171,7 @@ func news(par string) gin.H {
 		"url":     par,
 	}
 	var news []models.News
-	if err := models.GetDB().Where("published = ?", true).Order("id").Find(&news).Error; err != nil {
+	if err := models.GetDB().Where("published = ?", true).Limit(5).Order("-id").Find(&news).Error; err != nil {
 		log.Println(err)
 	}
 	out["items"] = news

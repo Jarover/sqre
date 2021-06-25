@@ -45,6 +45,17 @@ paths:
   
 definitions:
 
+  News:
+    type: "object"
+    properties:
+      items:
+        type: "array"
+        items:
+          $ref: "#/definitions/NewsArray"
+      version:
+        type: "string"
+        example: "0.1.45"       
+        description: "Version of server software"      
   Info:
     type: "object"
     properties:
@@ -125,6 +136,21 @@ definitions:
       name:
         type: "string"
       info:
+        type: "string"
+
+  NewsArray:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"      
+      name:
+        type: "string"
+      anonce:
+        type: "string"
+      desc:
+        type: "string"
+      image:
         type: "string"
 
 
