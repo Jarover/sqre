@@ -76,6 +76,9 @@ definitions:
       anonce:
         type: "string"
         example: "Short about object"
+      address:
+        type: "string"
+        example: "Address of object"        
       desc:
         type: "string"
         example: "Description object"

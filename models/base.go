@@ -26,10 +26,10 @@ func (Upload) TableName() string {
 }
 
 type News struct {
-	ID     int `json:"id"`
-	Name   string
-	Anonce string
-	Desc   string
+	ID     int    `json:"id"`
+	Name   string `json:"name"`
+	Anonce string `json:"anonce"`
+	Desc   string `json:"desc"`
 }
 
 func (News) TableName() string {

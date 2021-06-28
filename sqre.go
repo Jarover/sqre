@@ -168,7 +168,6 @@ func suffix(c *gin.Context) {
 func news(par string) gin.H {
 	out := gin.H{
 		"version": readconfig.Version.VersionStr(),
-		"url":     par,
 	}
 	var news []models.News
 	if err := models.GetDB().Where("published = ?", true).Limit(5).Order("-id").Find(&news).Error; err != nil {
@@ -210,6 +209,7 @@ func info(par string) gin.H {
 		out["id"] = obj.ID
 		out["name"] = obj.Name
 		out["anonce"] = obj.Anonce
+		out["address"] = obj.Address
 		out["desc"] = obj.Desc
 		out["catid"] = obj.Cat_id
 		out["lat"] = obj.Lat
@@ -245,6 +245,7 @@ func info(par string) gin.H {
 			if v.Suffix == "t" {
 				tracks = append(tracks, models.FieldRow{Name: "/media/" + v.Ufile, Info: v.Name})
 			}
+
 		}
 		for _, v := range attribute.Phones {
 			if v.Suffix == "e" {
@@ -276,6 +277,9 @@ func info(par string) gin.H {
 			}
 			if firstChar == "v" {
 				videos = append(videos, models.FieldRow{Name: v.Name, Info: v.Info})
+			}
+			if v.Suffix == "e" {
+				emails = append(emails, models.FieldRow{Name: v.Name, Info: v.Info})
 			}
 
 		}
