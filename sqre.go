@@ -40,6 +40,7 @@ func redirect(c *gin.Context) {
 
 			"error": par,
 		})
+		return
 	}
 
 	log.Println("redirect to : " + link.Remote)
@@ -56,12 +57,20 @@ func redirect(c *gin.Context) {
 	if result.Error != nil {
 		log.Println(result.Error)
 	}
-	if len(link.Remote) > 0 {
+	if len(link.Remote) > 5 {
 		c.Redirect(http.StatusMovedPermanently, link.Remote)
 		c.Abort()
 	} else {
 
 		switch link.Cat_id {
+		//contact
+		case 3:
+			c.HTML(http.StatusOK, "contact.html", gin.H{
+				"title":  "Контакт",
+				"anonce": link.Text,
+				"name":   link.Name,
+			})
+			break
 		// Object
 		case 4:
 			var obj = models.Gobject{}
@@ -117,6 +126,7 @@ func suffix(c *gin.Context) {
 
 		}
 		switch link.Cat_id {
+
 		// Object
 		case 4:
 			var obj = models.Gobject{}
@@ -198,6 +208,19 @@ func info(par string) gin.H {
 
 	switch link.Cat_id {
 	// Object
+	case 2:
+		out["anonce"] = link.Text
+		out["name"] = link.Name
+		out["url"] = link.Remote
+		break
+	// Contact
+	case 3:
+		out["anonce"] = link.Text
+		out["name"] = link.Name
+		out["url"] = ""
+
+		break
+	// Object
 	case 4:
 		var obj = models.Gobject{}
 		err := models.GetDB().First(&obj, "id = ?", link.Objid).Error
@@ -231,39 +254,54 @@ func info(par string) gin.H {
 		attribute := models.Attribute{}
 		bytes := []byte(obj.Attributes)
 		json.Unmarshal(bytes, &attribute)
-
-		for _, v := range images {
-			if v.Suffix == "i" {
-				photos = append(photos, models.FieldRow{Name: "/media/" + v.Ufile, Info: v.Name})
-			}
-			if v.Suffix == "a" {
-				audios = append(audios, models.FieldRow{Name: "/media/" + v.Ufile, Info: v.Name})
-			}
-			if v.Suffix == "r" {
-				routes = append(routes, models.FieldRow{Name: "/media/" + v.Ufile, Info: v.Name})
-			}
-			if v.Suffix == "t" {
-				tracks = append(tracks, models.FieldRow{Name: "/media/" + v.Ufile, Info: v.Name})
-			}
-
-		}
-		for _, v := range attribute.Phones {
-			if v.Suffix == "e" {
-				emails = append(emails, models.FieldRow{Name: v.Name, Info: v.Info})
-			}
-			if v.Suffix == "p" || v.Suffix == "" {
-				phones = append(phones, models.FieldRow{Name: v.Name, Info: v.Info})
-			}
-
-		}
 		var firstChar string
-		for _, v := range attribute.Urls {
-			if len(v.Suffix) > 1 {
+		for _, v := range images {
+			if len(v.Suffix) > 0 {
 				firstChar = v.Suffix[:1]
 			} else {
 				firstChar = ""
 			}
-			if firstChar == "u" || firstChar == "" {
+			if firstChar == "i" {
+				photos = append(photos, models.FieldRow{Name: "/media/" + v.Ufile, Info: v.Name})
+			}
+			if firstChar == "a" {
+				audios = append(audios, models.FieldRow{Name: "/media/" + v.Ufile, Info: v.Name})
+			}
+			if firstChar == "r" {
+				routes = append(routes, models.FieldRow{Name: "/media/" + v.Ufile, Info: v.Name})
+			}
+			if firstChar == "t" {
+				tracks = append(tracks, models.FieldRow{Name: "/media/" + v.Ufile, Info: v.Name})
+			}
+
+		}
+
+		if len(obj.Email) > 0 {
+			emails = append(emails, models.FieldRow{Name: obj.Email, Info: "E-mail"})
+		}
+
+		for _, v := range attribute.Phones {
+			if len(v.Suffix) > 0 {
+				firstChar = v.Suffix[:1]
+			} else {
+				firstChar = ""
+			}
+			if firstChar == "e" {
+				emails = append(emails, models.FieldRow{Name: v.Name, Info: v.Info})
+			}
+			if firstChar == "p" || v.Suffix == "" {
+				phones = append(phones, models.FieldRow{Name: v.Name, Info: v.Info})
+			}
+
+		}
+
+		for _, v := range attribute.Urls {
+			if len(v.Suffix) > 0 {
+				firstChar = v.Suffix[:1]
+			} else {
+				firstChar = ""
+			}
+			if firstChar == "u" || firstChar == "" || firstChar == "m" {
 				urls = append(urls, models.FieldRow{Name: v.Name, Info: v.Info})
 			}
 			if firstChar == "r" {
@@ -373,7 +411,7 @@ func main() {
 	log.SetOutput(l)
 
 	r := gin.Default()
-
+	r.LoadHTMLGlob(dir + "/templates/*")
 	r.GET("/", startPage)
 
 	r.GET("/:par", redirect)

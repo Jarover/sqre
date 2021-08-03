@@ -8,6 +8,7 @@ type Gobject struct {
 	Cat_id     int
 	Lat        float64
 	Lon        float64
+	Email      string
 	Address    string
 	Attributes string
 }
@@ -41,6 +42,8 @@ type LinkTrek struct {
 	Short     string
 	Cat_id    int
 	Objid     int
+	Name      string
+	Text      string
 	Remote    string
 	Published bool
 }

@@ -23,7 +23,7 @@ else
 fi
 
 echo '* Создаем архив...'
-tar -czf yourproject.tar.gz sqre version.json
+tar -czf yourproject.tar.gz sqre version.json templates/*
 if [ $? -ne 0 ]
 then
   exit 1;
@@ -44,7 +44,7 @@ fi;
 
 
 echo '* Распаковываем архив на серверe...'
-ssh $SSH_HOST "cd $DOC_ROOT; tar -xzf yourproject.tar.gz 2> /dev/null && rm -rf $DOC_ROOT/goapp/sqre && rm -rf $DOC_ROOT/goapp/version.json && mv sqre $DOC_ROOT/goapp  && mv version.json $DOC_ROOT/goapp && chmod -R a+w+x $DOC_ROOT/goapp/sqre"
+ssh $SSH_HOST "cd $DOC_ROOT; tar -xzf yourproject.tar.gz 2> /dev/null && rm -rf $DOC_ROOT/goapp/sqre && rm -rf $DOC_ROOT/goapp/version.json  && rm -rf $DOC_ROOT/goapp/templates/*  &&  mv templates/ $DOC_ROOT/goapp/ && mv sqre $DOC_ROOT/goapp  && mv version.json $DOC_ROOT/goapp && chmod -R a+w+x $DOC_ROOT/goapp/sqre"
 if [ $? -ne 0 ]
 then
   exit 1;
